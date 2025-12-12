@@ -14,12 +14,10 @@ import { authenticated } from '../access/authenticated'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Determine if we're using Vercel Blob storage
+// When using Vercel Blob storage (BLOB_READ_WRITE_TOKEN is set),
+// the storage plugin automatically handles file storage and sets disableLocalStorage.
+// For local development without blob storage, we use the local filesystem.
 const useVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN)
-const isVercel = Boolean(process.env.VERCEL)
-const isProduction = process.env.NODE_ENV === 'production'
-// Use local storage only in development when not using Vercel Blob
-const useLocalStorage = !useVercelBlob && !isVercel && !isProduction
 
 const uploadConfig: CollectionConfig['upload'] = {
   adminThumbnail: 'thumbnail',
@@ -57,14 +55,10 @@ const uploadConfig: CollectionConfig['upload'] = {
       crop: 'center',
     },
   ],
+  // Only set staticDir for local development (when not using Vercel Blob)
+  // The Vercel Blob plugin handles storage automatically when enabled
+  ...(useVercelBlob ? {} : { staticDir: path.resolve(dirname, '../../public/media') }),
 }
-
-// Use local storage only in development (non-serverless environments)
-// When Vercel Blob is configured, don't set staticDir (the plugin handles storage)
-if (useLocalStorage) {
-  uploadConfig.staticDir = path.resolve(dirname, '../../public/media')
-}
-// If Vercel Blob is configured, staticDir should be undefined (handled by plugin)
 
 export const Media: CollectionConfig = {
   slug: 'media',
