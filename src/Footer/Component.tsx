@@ -17,7 +17,7 @@ export async function Footer() {
     <footer className="mt-auto border-t border-border">
       <div className="container py-8 flex flex-col md:flex-row md:justify-between gap-4">
         <div className="text-sm text-muted-foreground">
-          ©{currentYear} Dair Massey
+          ©{currentYear} Jandey Shackelford
         </div>
 
         <div className="flex flex-col-reverse items-start md:flex-row gap-4 md:items-center">
