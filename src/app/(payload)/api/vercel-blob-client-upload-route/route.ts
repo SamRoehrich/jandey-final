@@ -1,5 +1,7 @@
 import { getClientUploadRoute } from '@payloadcms/storage-vercel-blob'
-import config from '@payload-config'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
+import type { PayloadRequest } from 'payload'
 
 // Only create the route handler if BLOB_READ_WRITE_TOKEN is set
 if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -16,11 +18,53 @@ if (!process.env.BLOB_READ_WRITE_TOKEN) {
     },
   })
 
-  // Wrap the handler to ensure it receives the config
   export const POST = async (req: Request) => {
-    // The handler expects a PayloadRequest, which should be compatible
-    // with Next.js Request when used with Payload's Next.js integration
-    return handler(req as any)
+    try {
+      // Get Payload instance
+      const payload = await getPayload({ config: configPromise })
+
+      // Authenticate the user from the request
+      const authResult = await payload.auth({
+        headers: req.headers,
+      })
+
+      if (!authResult.user) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+
+      // Create an enhanced request object that extends the original Request
+      // with Payload context needed by the handler
+      const enhancedReq = Object.create(req) as PayloadRequest & Request
+      
+      // Attach Payload context
+      enhancedReq.payload = payload
+      enhancedReq.user = authResult.user
+
+      // Call the handler with the enhanced request
+      return handler(enhancedReq)
+    } catch (error) {
+      // If there's an error, try to get payload instance for logging
+      try {
+        const payload = await getPayload({ config: configPromise })
+        payload.logger.error({ err: error }, 'Error in Vercel Blob client upload route')
+      } catch {
+        // If we can't get payload, just log to console
+        console.error('Error in Vercel Blob client upload route:', error)
+      }
+
+      // Return appropriate error response
+      if (error instanceof Error) {
+        if (error.message.includes('Forbidden') || error.name === 'Forbidden') {
+          return new Response('Forbidden', { status: 403 })
+        }
+        if (error.message.includes('Unauthorized')) {
+          return new Response('Unauthorized', { status: 401 })
+        }
+        return new Response(error.message, { status: 500 })
+      }
+
+      return new Response('Internal server error', { status: 500 })
+    }
   }
 }
 
