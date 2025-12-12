@@ -21,10 +21,13 @@ type Props = CarouselBlockProps & {
 }
 
 export const CarouselBlock: React.FC<Props> = (props) => {
-  const { slides, showNavigation = true, autoplay = false, autoplayInterval = 5000, className } = props
+  const { slides, showNavigation = true, autoplay = false, autoplayInterval, className } = props
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
   const [count, setCount] = React.useState(0)
+
+  // Default autoplay interval to 5000ms if not provided
+  const intervalMs = autoplayInterval ?? 5000
 
   // Autoplay plugin would be added here if embla-carousel-autoplay is installed
   // For now, we'll implement a simple autoplay using useEffect
@@ -45,7 +48,7 @@ export const CarouselBlock: React.FC<Props> = (props) => {
 
   // Simple autoplay implementation
   useEffect(() => {
-    if (!autoplay || !api) {
+    if (!autoplay || !api || !intervalMs) {
       return
     }
 
@@ -55,10 +58,10 @@ export const CarouselBlock: React.FC<Props> = (props) => {
       } else {
         api.scrollTo(0)
       }
-    }, autoplayInterval)
+    }, intervalMs)
 
     return () => clearInterval(interval)
-  }, [api, autoplay, autoplayInterval])
+  }, [api, autoplay, intervalMs])
 
   if (!slides || slides.length === 0) {
     return null
