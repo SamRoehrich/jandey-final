@@ -55,6 +55,9 @@ const uploadConfig: CollectionConfig['upload'] = {
   ],
   // Use local filesystem as fallback when Vercel Blob is not configured
   staticDir: path.resolve(dirname, '../../public/media'),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB in bytes
+  },
 }
 
 export const Media: CollectionConfig = {

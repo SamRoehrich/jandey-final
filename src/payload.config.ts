@@ -55,6 +55,11 @@ export default buildConfig({
       ],
     },
   },
+  upload: {
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB in bytes
+    },
+  },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: postgresAdapter({
