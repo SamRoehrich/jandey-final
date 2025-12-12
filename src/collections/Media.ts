@@ -14,7 +14,8 @@ import { authenticated } from '../access/authenticated'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Using local filesystem for media storage
+// Media storage is handled by Vercel Blob plugin when enabled,
+// otherwise falls back to local filesystem
 
 const uploadConfig: CollectionConfig['upload'] = {
   adminThumbnail: 'thumbnail',
@@ -52,6 +53,7 @@ const uploadConfig: CollectionConfig['upload'] = {
       crop: 'center',
     },
   ],
+  // Use local filesystem as fallback when Vercel Blob is not configured
   staticDir: path.resolve(dirname, '../../public/media'),
 }
 
