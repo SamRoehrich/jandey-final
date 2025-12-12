@@ -13,7 +13,6 @@ import { beforeSyncWithSearch } from '@/search/beforeSync'
 
 import { Page, Post } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
-import { Media } from '@/collections/Media'
 
 const generateTitle: GenerateTitle<Post | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Website Template` : 'Payload Website Template'
@@ -31,17 +30,9 @@ export const plugins: Plugin[] = [
   // Plugin will only be active when BLOB_READ_WRITE_TOKEN is set
   vercelBlobStorage({
     collections: {
-      media: {
-        clientUploads: true,
-      },
+      media: true,
     },
     token: process.env.BLOB_READ_WRITE_TOKEN || '',
-    clientUploads: {
-      // Only allow authenticated users to upload
-      access: async ({ req }) => {
-        return !!req.user
-      },
-    },
     // Plugin will be inactive without a valid token
   }),
   redirectsPlugin({

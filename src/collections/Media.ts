@@ -68,7 +68,7 @@ export const Media: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data, req }) => {
+      ({ data }) => {
         // Add file size and type validation here if needed
         // For now, let the plugin handle validation
         return data
