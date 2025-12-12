@@ -14,10 +14,7 @@ import { authenticated } from '../access/authenticated'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// When using Vercel Blob storage (BLOB_READ_WRITE_TOKEN is set),
-// the storage plugin automatically handles file storage and sets disableLocalStorage.
-// For local development without blob storage, we use the local filesystem.
-const useVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+// Using local filesystem for media storage
 
 const uploadConfig: CollectionConfig['upload'] = {
   adminThumbnail: 'thumbnail',
@@ -55,9 +52,7 @@ const uploadConfig: CollectionConfig['upload'] = {
       crop: 'center',
     },
   ],
-  // Only set staticDir for local development (when not using Vercel Blob)
-  // The Vercel Blob plugin handles storage automatically when enabled
-  ...(useVercelBlob ? {} : { staticDir: path.resolve(dirname, '../../public/media') }),
+  staticDir: path.resolve(dirname, '../../public/media'),
 }
 
 export const Media: CollectionConfig = {
