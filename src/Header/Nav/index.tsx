@@ -34,15 +34,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, pages }) => {
         })}
       {navItems.map(({ link }, i) => {
         return (
-          <CMSLink 
-            key={`nav-${i}`} 
-            {...link} 
+          <CMSLink
+            key={`nav-${i}`}
+            {...link}
             appearance="link"
             className="text-base font-normal hover:opacity-70 transition-opacity"
           />
         )
       })}
-      <Link 
+      <Link
         href="/search"
         className="flex items-center gap-2 text-base font-normal hover:opacity-70 transition-opacity"
       >

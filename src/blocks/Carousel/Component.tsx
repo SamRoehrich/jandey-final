@@ -109,9 +109,7 @@ export const CarouselBlock: React.FC<Props> = (props) => {
               key={index}
               className={cn(
                 'h-2 w-2 rounded-full transition-all',
-                current === index + 1
-                  ? 'bg-foreground w-8'
-                  : 'bg-muted-foreground/30'
+                current === index + 1 ? 'bg-foreground w-8' : 'bg-muted-foreground/30',
               )}
               onClick={() => api?.scrollTo(index)}
               aria-label={`Go to slide ${index + 1}`}
@@ -122,4 +120,3 @@ export const CarouselBlock: React.FC<Props> = (props) => {
     </div>
   )
 }
-

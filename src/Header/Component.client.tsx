@@ -39,7 +39,10 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, pages }) => {
   return (
     <header className="container relative z-20" {...(theme ? { 'data-theme': theme } : {})}>
       <div className="py-6 flex justify-between items-center">
-        <Link href="/" className="text-xl font-normal tracking-tight hover:opacity-70 transition-opacity">
+        <Link
+          href="/"
+          className="text-xl font-normal tracking-tight hover:opacity-70 transition-opacity"
+        >
           jandey
         </Link>
         {/* Desktop Navigation - shown on md and up */}

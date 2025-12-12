@@ -16,9 +16,7 @@ export async function Footer() {
   return (
     <footer className="mt-auto border-t border-border">
       <div className="container py-8 flex flex-col md:flex-row md:justify-between gap-4">
-        <div className="text-sm text-muted-foreground">
-          ©{currentYear} Jandey Shackelford
-        </div>
+        <div className="text-sm text-muted-foreground">©{currentYear} Jandey Shackelford</div>
 
         <div className="flex flex-col-reverse items-start md:flex-row gap-4 md:items-center">
           <ThemeSelector />
@@ -26,8 +24,8 @@ export async function Footer() {
             <nav className="flex flex-col md:flex-row gap-4">
               {navItems.map(({ link }, i) => {
                 return (
-                  <CMSLink 
-                    key={i} 
+                  <CMSLink
+                    key={i}
                     {...link}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   />
