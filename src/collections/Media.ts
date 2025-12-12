@@ -91,10 +91,5 @@ export const Media: CollectionConfig = {
       }),
     },
   ],
-  upload: {
-    ...uploadConfig,
-    limits: {
-      fileSize: 50 * 1024 * 1024, // 50MB in bytes
-    },
-  },
+  upload: uploadConfig,
 }
