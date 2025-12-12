@@ -27,17 +27,15 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
 
 export const plugins: Plugin[] = [
   // Vercel Blob Storage for media uploads in production
-  // Only enable if BLOB_READ_WRITE_TOKEN environment variable is set
-  ...(process.env.BLOB_READ_WRITE_TOKEN
-    ? [
-        vercelBlobStorage({
-          collections: {
-            media: true,
-          },
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        }),
-      ]
-    : []),
+  // Always include the plugin to ensure import map has the necessary components
+  // Plugin will only be active when BLOB_READ_WRITE_TOKEN is set
+  vercelBlobStorage({
+    collections: {
+      media: true,
+    },
+    token: process.env.BLOB_READ_WRITE_TOKEN || '',
+    // Plugin will be inactive without a valid token
+  }),
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
