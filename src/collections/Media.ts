@@ -20,6 +20,8 @@ const dirname = path.dirname(filename)
 const uploadConfig: CollectionConfig['upload'] = {
   adminThumbnail: 'thumbnail',
   focalPoint: true,
+  // Limit file size to 10MB to prevent upload failures
+  uploadSizeLimit: 10485760, // 10MB in bytes
   imageSizes: [
     {
       name: 'thumbnail',
@@ -55,6 +57,8 @@ const uploadConfig: CollectionConfig['upload'] = {
   ],
   // Use local filesystem as fallback when Vercel Blob is not configured
   staticDir: path.resolve(dirname, '../../public/media'),
+  // Restrict to common image types to prevent upload issues
+  mimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
 }
 
 export const Media: CollectionConfig = {
