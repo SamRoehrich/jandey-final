@@ -35,8 +35,8 @@ export const plugins: Plugin[] = [
             [Media.slug]: true,
           },
           token: process.env.BLOB_READ_WRITE_TOKEN,
-          // Enable client-side uploads to bypass Vercel's 4.5MB server upload limit
-          clientUploads: true,
+          // Temporarily disable client-side uploads to test admin dashboard
+          // clientUploads: true,
         }),
       ]
     : []),
