@@ -31,9 +31,9 @@ const config = {
       center: true,
       padding: {
         '2xl': '2rem',
-        DEFAULT: '1rem',
+        DEFAULT: '1.5rem',
         lg: '2rem',
-        md: '2rem',
+        md: '1.5rem',
         sm: '1rem',
         xl: '2rem',
       },
@@ -111,11 +111,33 @@ const config = {
         DEFAULT: {
           css: [
             {
-              '--tw-prose-body': 'var(--text)',
-              '--tw-prose-headings': 'var(--text)',
+              '--tw-prose-body': 'hsl(var(--foreground))',
+              '--tw-prose-headings': 'hsl(var(--foreground))',
+              '--tw-prose-links': 'hsl(var(--foreground))',
+              '--tw-prose-bold': 'hsl(var(--foreground))',
+              maxWidth: 'none',
               h1: {
                 fontWeight: 'normal',
-                marginBottom: '0.25em',
+                marginBottom: '0.5em',
+                marginTop: '0',
+                lineHeight: '1.2',
+              },
+              h2: {
+                fontWeight: 'normal',
+                marginTop: '2em',
+                marginBottom: '0.5em',
+                lineHeight: '1.3',
+              },
+              p: {
+                marginTop: '1em',
+                marginBottom: '1em',
+                lineHeight: '1.6',
+              },
+              a: {
+                fontWeight: 'inherit',
+                textDecoration: 'underline',
+                textDecorationThickness: '1px',
+                textUnderlineOffset: '2px',
               },
             },
           ],
@@ -124,11 +146,12 @@ const config = {
           css: [
             {
               h1: {
-                fontSize: '2.5rem',
+                fontSize: '2rem',
+                fontWeight: 'normal',
               },
               h2: {
                 fontSize: '1.25rem',
-                fontWeight: 600,
+                fontWeight: 'normal',
               },
             },
           ],
@@ -137,10 +160,12 @@ const config = {
           css: [
             {
               h1: {
-                fontSize: '3.5rem',
+                fontSize: '2.5rem',
+                fontWeight: 'normal',
               },
               h2: {
                 fontSize: '1.5rem',
+                fontWeight: 'normal',
               },
             },
           ],
