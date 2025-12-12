@@ -30,7 +30,9 @@ export const plugins: Plugin[] = [
   // Plugin will only be active when BLOB_READ_WRITE_TOKEN is set
   vercelBlobStorage({
     collections: {
-      media: true,
+      media: {
+        prefix: 'media',
+      },
     },
     token: process.env.BLOB_READ_WRITE_TOKEN || '',
     // Plugin will be inactive without a valid token

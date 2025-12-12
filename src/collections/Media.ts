@@ -55,6 +55,8 @@ const uploadConfig: CollectionConfig['upload'] = {
   ],
   // Use local filesystem as fallback when Vercel Blob is not configured
   staticDir: path.resolve(dirname, '../../public/media'),
+  // Disable default upload behavior to use custom client-side upload
+  disableLocalStorage: process.env.BLOB_READ_WRITE_TOKEN ? true : false,
 }
 
 export const Media: CollectionConfig = {
@@ -65,6 +67,9 @@ export const Media: CollectionConfig = {
     delete: authenticated,
     read: anyone,
     update: authenticated,
+  },
+  admin: {
+    useAsTitle: 'alt',
   },
   hooks: {
     beforeChange: [
@@ -79,7 +84,10 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      //required: true,
+      required: true,
+      admin: {
+        description: 'Alternative text for accessibility',
+      },
     },
     {
       name: 'caption',
@@ -89,6 +97,17 @@ export const Media: CollectionConfig = {
           return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]
         },
       }),
+    },
+    // Custom upload field for client-side uploads
+    {
+      name: 'customUpload',
+      type: 'text',
+      admin: {
+        components: {
+          Field: '@/components/CustomUpload',
+        },
+        description: 'Upload images directly to cloud storage (bypasses 4.5MB limit)',
+      },
     },
   ],
   upload: uploadConfig,
