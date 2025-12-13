@@ -1,21 +1,31 @@
-build
-dist / media
+# Dependencies
 node_modules
-.DS_Store
+
+# Build outputs
+build
+dist
+
+# Environment files
 .env
-.next
-.vercel
+.env.local
+.env*.local
 
-# Payload default media upload directory
-public/media/
+# OS files
+.DS_Store
+Thumbs.db
 
-public/robots.txt
-public/sitemap*.xml
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea
 
+# Tailscale state (managed by Docker volume)
+tailscale-state/
 
-# Playwright
-node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+# Bun
+bun.lockb.bak
+
+# Logs
+*.log
