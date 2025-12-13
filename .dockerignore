@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts (from old Next.js)
+.next
+out
+build
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files (will be passed via docker-compose)
+.env
+.env.*
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Lock files from other package managers
+package-lock.json
+pnpm-lock.yaml
+
+# Tailscale state (managed by docker volume)
+tailscale-state
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore

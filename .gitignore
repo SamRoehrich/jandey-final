@@ -1,17 +1,31 @@
+# Dependencies
+node_modules
+
+# Build outputs
 build
 dist
-node_modules
-.DS_Store
+
+# Environment files
 .env
-.next
-.vercel
-
-public/robots.txt
-public/sitemap*.xml
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+.env.local
 .env*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea
+
+# Tailscale state (managed by Docker volume)
+tailscale-state/
+
+# Bun
+bun.lockb.bak
+
+# Logs
+*.log
