@@ -1,14 +1,25 @@
 'use client'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
 import React, { useEffect } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 
-import type { Page } from '@/payload-types'
+export interface HighImpactHeroProps {
+  title?: string
+  description?: string
+  image?: string
+  links?: Array<{
+    label: string
+    href: string
+  }>
+}
 
-import { CMSLink } from '@/components/Link'
-import { Media } from '@/components/Media'
-import RichText from '@/components/RichText'
-
-export const HighImpactHero: React.FC<Page['hero']> = ({ links, media, richText }) => {
+export const HighImpactHero: React.FC<HighImpactHeroProps> = ({
+  title,
+  description,
+  image,
+  links,
+}) => {
   const { setHeaderTheme } = useHeaderTheme()
 
   useEffect(() => {
@@ -22,23 +33,27 @@ export const HighImpactHero: React.FC<Page['hero']> = ({ links, media, richText 
     >
       <div className="container mb-8 z-10 relative flex items-center justify-center">
         <div className="max-w-[36.5rem] md:text-center">
-          {richText && <RichText className="mb-6" data={richText} enableGutter={false} />}
+          {title && <h1 className="mb-4 text-4xl md:text-5xl lg:text-6xl font-bold">{title}</h1>}
+          {description && <p className="mb-6 text-lg">{description}</p>}
           {Array.isArray(links) && links.length > 0 && (
             <ul className="flex md:justify-center gap-4">
-              {links.map(({ link }, i) => {
-                return (
-                  <li key={i}>
-                    <CMSLink {...link} />
-                  </li>
-                )
-              })}
+              {links.map((link, i) => (
+                <li key={i}>
+                  <Link
+                    href={link.href}
+                    className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-100 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </div>
       </div>
       <div className="min-h-[80vh] select-none">
-        {media && typeof media === 'object' && (
-          <Media fill imgClassName="-z-10 object-cover" priority resource={media} />
+        {image && (
+          <Image src={image} alt={title || ''} fill priority className="-z-10 object-cover" />
         )}
       </div>
     </div>

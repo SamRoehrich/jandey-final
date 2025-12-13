@@ -1,5 +1,3 @@
-import { withPayload } from '@payloadcms/next/withPayload'
-
 import redirects from './redirects.js'
 
 const NEXT_PUBLIC_SERVER_URL =
@@ -22,11 +20,6 @@ const nextConfig = {
           protocol: url.protocol.replace(':', ''),
         }
       }),
-      // Vercel Blob Storage for uploaded media
-      {
-        protocol: 'https',
-        hostname: '*.blob.vercel-storage.com',
-      },
       // Vercel preview deployments
       {
         protocol: 'https',
@@ -34,25 +27,8 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (webpackConfig) => {
-    webpackConfig.resolve.extensionAlias = {
-      '.cjs': ['.cts', '.cjs'],
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
-    }
-
-    return webpackConfig
-  },
   reactStrictMode: true,
   redirects,
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '50mb',
-    },
-  },
 }
 
-export default withPayload(nextConfig, {
-  devBundleServerPackages: false,
-  payloadPath: 'src/payload.config.ts',
-})
+export default nextConfig

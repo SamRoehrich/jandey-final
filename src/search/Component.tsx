@@ -1,41 +1,37 @@
 'use client'
+
+import React, { useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import React, { useState, useEffect } from 'react'
-import { useDebounce } from '@/utilities/useDebounce'
-import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 export const Search: React.FC = () => {
-  const [value, setValue] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [query, setQuery] = useState(searchParams.get('q') || '')
 
-  const debouncedValue = useDebounce(value)
-
-  useEffect(() => {
-    router.push(`/search${debouncedValue ? `?q=${debouncedValue}` : ''}`)
-  }, [debouncedValue, router])
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (query.trim()) {
+        router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+      } else {
+        router.push('/search')
+      }
+    },
+    [query, router],
+  )
 
   return (
-    <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-        }}
-      >
-        <Label htmlFor="search" className="sr-only">
-          Search
-        </Label>
-        <Input
-          id="search"
-          onChange={(event) => {
-            setValue(event.target.value)
-          }}
-          placeholder="Search"
-        />
-        <button type="submit" className="sr-only">
-          submit
-        </button>
-      </form>
-    </div>
+    <form onSubmit={handleSearch} className="flex gap-2">
+      <Input
+        type="search"
+        placeholder="Search posts..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="flex-1"
+      />
+      <Button type="submit">Search</Button>
+    </form>
   )
 }

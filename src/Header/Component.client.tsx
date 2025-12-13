@@ -3,20 +3,11 @@ import { useHeaderTheme } from '@/providers/HeaderTheme'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, SearchIcon } from 'lucide-react'
 
-import type { Header, Page } from '@/payload-types'
+import { headerNav } from '@/data/navigation'
 
-import { Logo } from '@/components/Logo/Logo'
-import { HeaderNav } from './Nav'
-
-interface HeaderClientProps {
-  data: Header
-  pages: Array<Pick<Page, 'slug' | 'title'>>
-}
-
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data, pages }) => {
-  /* Storing the value in a useState to avoid hydration errors */
+export const HeaderClient: React.FC = () => {
   const [theme, setTheme] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
@@ -47,7 +38,22 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, pages }) => {
         </Link>
         {/* Desktop Navigation - shown on md and up */}
         <nav className="hidden md:flex items-center gap-6">
-          <HeaderNav data={data} pages={pages} />
+          {headerNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-base font-normal hover:opacity-70 transition-opacity"
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            href="/search"
+            className="flex items-center gap-2 text-base font-normal hover:opacity-70 transition-opacity"
+          >
+            <span>Search</span>
+            <SearchIcon className="w-5 h-5" />
+          </Link>
         </nav>
         {/* Mobile Menu Button - shown on mobile only */}
         <button
@@ -72,8 +78,23 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, pages }) => {
       {/* Mobile Navigation - shown when menu is open on mobile */}
       {menuOpen && (
         <nav className="md:hidden absolute top-full left-0 right-0 bg-background border-t border-border py-6 shadow-sm">
-          <div className="container">
-            <HeaderNav data={data} pages={pages} />
+          <div className="container flex flex-col gap-4">
+            {headerNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-base font-normal hover:opacity-70 transition-opacity"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href="/search"
+              className="flex items-center gap-2 text-base font-normal hover:opacity-70 transition-opacity"
+            >
+              <span>Search</span>
+              <SearchIcon className="w-5 h-5" />
+            </Link>
           </div>
         </nav>
       )}

@@ -1,45 +1,25 @@
 import type { Metadata } from 'next'
-
-import type { Media, Page, Post, Config } from '../payload-types'
+import type { Post } from '@/types/post'
 
 import { mergeOpenGraph } from './mergeOpenGraph'
 import { getServerSideURL } from './getURL'
 
-const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
-  const serverUrl = getServerSideURL()
-
-  let url = serverUrl + '/website-template-OG.webp'
-
-  if (image && typeof image === 'object' && 'url' in image) {
-    const ogUrl = image.sizes?.og?.url
-    const imageUrl = ogUrl || image.url
-
-    // Vercel Blob URLs are already absolute, don't prepend serverUrl
-    if (imageUrl?.startsWith('http://') || imageUrl?.startsWith('https://')) {
-      url = imageUrl
-    } else {
-      url = serverUrl + imageUrl
-    }
-  }
-
-  return url
-}
-
-export const generateMeta = async (args: {
-  doc: Partial<Page> | Partial<Post> | null
-}): Promise<Metadata> => {
+export const generateMeta = async (args: { doc: Post | null }): Promise<Metadata> => {
   const { doc } = args
 
-  const ogImage = getImageURL(doc?.meta?.image)
+  const serverUrl = getServerSideURL()
+  const ogImage = doc?.heroImage
+    ? doc.heroImage.startsWith('http')
+      ? doc.heroImage
+      : serverUrl + doc.heroImage
+    : serverUrl + '/website-template-OG.webp'
 
-  const title = doc?.meta?.title
-    ? doc?.meta?.title + ' | Payload Website Template'
-    : 'Payload Website Template'
+  const title = doc?.title ? doc.title + ' | Blog' : 'Blog'
 
   return {
-    description: doc?.meta?.description,
+    description: doc?.description,
     openGraph: mergeOpenGraph({
-      description: doc?.meta?.description || '',
+      description: doc?.description || '',
       images: ogImage
         ? [
             {
@@ -48,7 +28,7 @@ export const generateMeta = async (args: {
           ]
         : undefined,
       title,
-      url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
+      url: doc?.slug ? `/posts/${doc.slug}` : '/',
     }),
     title,
   }

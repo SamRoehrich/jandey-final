@@ -2,32 +2,16 @@
 import { cn } from '@/utilities/ui'
 import useClickableCard from '@/utilities/useClickableCard'
 import Link from 'next/link'
-import React, { Fragment } from 'react'
+import Image from 'next/image'
+import React from 'react'
 
-import type { Post } from '@/payload-types'
-
-import { Media } from '@/components/Media'
-
-export type CardPostData = Pick<Post, 'slug' | 'categories' | 'meta' | 'title'>
+import type { Post } from '@/types/post'
 
 export const Card: React.FC<{
-  alignItems?: 'center'
+  post: Post
   className?: string
-  doc?: CardPostData
-  relationTo?: 'posts'
-  showCategories?: boolean
-  title?: string
-}> = (props) => {
+}> = ({ post, className }) => {
   const { card, link } = useClickableCard({})
-  const { className, doc, relationTo, showCategories, title: titleFromProps } = props
-
-  const { slug, categories, meta, title } = doc || {}
-  const { description, image: metaImage } = meta || {}
-
-  const hasCategories = categories && Array.isArray(categories) && categories.length > 0
-  const titleToUse = titleFromProps || title
-  const sanitizedDescription = description?.replace(/\s/g, ' ') // replace non-breaking space with white space
-  const href = `/${relationTo}/${slug}`
 
   return (
     <article
@@ -37,47 +21,47 @@ export const Card: React.FC<{
       )}
       ref={card.ref}
     >
-      <div className="relative w-full ">
-        {!metaImage && <div className="">No image</div>}
-        {metaImage && typeof metaImage !== 'string' && <Media resource={metaImage} size="33vw" />}
+      <div className="relative w-full aspect-video">
+        {post.heroImage ? (
+          <Image
+            src={post.heroImage}
+            alt={post.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground">No image</span>
+          </div>
+        )}
       </div>
       <div className="p-4">
-        {showCategories && hasCategories && (
-          <div className="uppercase text-sm mb-4">
-            {showCategories && hasCategories && (
-              <div>
-                {categories?.map((category, index) => {
-                  if (typeof category === 'object') {
-                    const { title: titleFromCategory } = category
-
-                    const categoryTitle = titleFromCategory || 'Untitled category'
-
-                    const isLast = index === categories.length - 1
-
-                    return (
-                      <Fragment key={index}>
-                        {categoryTitle}
-                        {!isLast && <Fragment>, &nbsp;</Fragment>}
-                      </Fragment>
-                    )
-                  }
-
-                  return null
-                })}
-              </div>
-            )}
-          </div>
+        <div className="prose dark:prose-invert">
+          <h3 className="mt-0">
+            <Link
+              className="not-prose no-underline hover:underline"
+              href={`/posts/${post.slug}`}
+              ref={link.ref}
+            >
+              {post.title}
+            </Link>
+          </h3>
+        </div>
+        {post.description && (
+          <p className="mt-2 text-muted-foreground text-sm line-clamp-2">{post.description}</p>
         )}
-        {titleToUse && (
-          <div className="prose">
-            <h3>
-              <Link className="not-prose" href={href} ref={link.ref}>
-                {titleToUse}
-              </Link>
-            </h3>
-          </div>
-        )}
-        {description && <div className="mt-2">{description && <p>{sanitizedDescription}</p>}</div>}
+        <div className="mt-3 text-xs text-muted-foreground">
+          <span>{post.author}</span>
+          <span className="mx-2">•</span>
+          <time dateTime={post.publishedAt}>
+            {new Date(post.publishedAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </time>
+        </div>
       </div>
     </article>
   )

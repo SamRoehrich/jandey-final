@@ -1,11 +1,26 @@
 import React from 'react'
-
-import type { CallToActionBlock as CTABlockProps } from '@/payload-types'
-
 import RichText from '@/components/RichText'
 import { CMSLink } from '@/components/Link'
 
-export const CallToActionBlock: React.FC<CTABlockProps> = ({ links, richText }) => {
+type LinkItem = {
+  link?: {
+    type?: 'custom' | 'reference' | null
+    url?: string | null
+    label?: string | null
+    newTab?: boolean | null
+    reference?: {
+      relationTo: 'pages' | 'posts'
+      value: { slug?: string } | string | number
+    } | null
+  }
+}
+
+type CallToActionBlockProps = {
+  links?: LinkItem[] | null
+  richText?: React.ReactNode | string | null
+}
+
+export const CallToActionBlock: React.FC<CallToActionBlockProps> = ({ links, richText }) => {
   return (
     <div className="container">
       <div className="bg-card rounded border-border border p-4 flex flex-col gap-8 md:flex-row md:justify-between md:items-center">

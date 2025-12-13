@@ -1,15 +1,34 @@
 import { cn } from '@/utilities/ui'
 import React from 'react'
 import RichText from '@/components/RichText'
+import { CMSLink } from '@/components/Link'
 
-import type { ContentBlock as ContentBlockProps } from '@/payload-types'
+type ColumnSize = 'full' | 'half' | 'oneThird' | 'twoThirds'
 
-import { CMSLink } from '../../components/Link'
+type Column = {
+  size?: ColumnSize | null
+  richText?: React.ReactNode | string | null
+  enableLink?: boolean | null
+  link?: {
+    type?: 'custom' | 'reference' | null
+    url?: string | null
+    label?: string | null
+    newTab?: boolean | null
+    reference?: {
+      relationTo: 'pages' | 'posts'
+      value: { slug?: string } | string | number
+    } | null
+  }
+}
+
+type ContentBlockProps = {
+  columns?: Column[] | null
+}
 
 export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
   const { columns } = props
 
-  const colsSpanClasses = {
+  const colsSpanClasses: Record<ColumnSize, string> = {
     full: '12',
     half: '6',
     oneThird: '4',
@@ -26,7 +45,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
 
             return (
               <div
-                className={cn(`col-span-4 lg:col-span-${colsSpanClasses[size!]}`, {
+                className={cn(`col-span-4 lg:col-span-${colsSpanClasses[size || 'full']}`, {
                   'md:col-span-2': size !== 'full',
                 })}
                 key={index}

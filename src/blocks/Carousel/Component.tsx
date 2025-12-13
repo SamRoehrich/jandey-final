@@ -2,8 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { cn } from '@/utilities/ui'
-import RichText from '@/components/RichText'
-import { Media } from '@/components/Media'
+import Image from 'next/image'
 import {
   Carousel,
   CarouselContent,
@@ -13,11 +12,17 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel'
 
-import type { CarouselBlock as CarouselBlockProps } from '@/payload-types'
+export type CarouselSlide = {
+  image?: string
+  caption?: string
+}
 
-type Props = CarouselBlockProps & {
+type Props = {
+  slides?: CarouselSlide[]
+  showNavigation?: boolean
+  autoplay?: boolean
+  autoplayInterval?: number
   className?: string
-  disableInnerContainer?: boolean
 }
 
 export const CarouselBlock: React.FC<Props> = (props) => {
@@ -29,8 +34,7 @@ export const CarouselBlock: React.FC<Props> = (props) => {
   // Default autoplay interval to 5000ms if not provided
   const intervalMs = autoplayInterval ?? 5000
 
-  // Autoplay plugin would be added here if embla-carousel-autoplay is installed
-  // For now, we'll implement a simple autoplay using useEffect
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugins: any[] = []
 
   useEffect(() => {
@@ -72,22 +76,24 @@ export const CarouselBlock: React.FC<Props> = (props) => {
       <Carousel setApi={setApi} plugins={plugins} className="w-full">
         <CarouselContent>
           {slides.map((slide, index) => {
-            const { richText, media } = slide
+            const { image, caption } = slide
 
             return (
               <CarouselItem key={index}>
                 <div className="flex flex-col gap-6">
-                  {media && typeof media === 'object' && (
-                    <div className="w-full">
-                      <Media
-                        resource={media}
-                        imgClassName="w-full h-auto rounded-lg object-cover"
+                  {image && (
+                    <div className="w-full relative aspect-video">
+                      <Image
+                        src={image}
+                        alt={caption || ''}
+                        fill
+                        className="rounded-lg object-cover"
                       />
                     </div>
                   )}
-                  {richText && (
+                  {caption && (
                     <div>
-                      <RichText data={richText} enableGutter={false} />
+                      <p className="text-muted-foreground">{caption}</p>
                     </div>
                   )}
                 </div>
