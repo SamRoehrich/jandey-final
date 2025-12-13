@@ -30,9 +30,7 @@ export const plugins: Plugin[] = [
   // Plugin will only be active when BLOB_READ_WRITE_TOKEN is set
   vercelBlobStorage({
     collections: {
-      media: {
-        prefix: 'media',
-      },
+      media: true,
     },
     token: process.env.BLOB_READ_WRITE_TOKEN || '',
     // Enable client-side uploads to bypass Vercel's 4.5MB serverless function limit
