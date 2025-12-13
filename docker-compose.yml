@@ -3,7 +3,7 @@ services:
     image: ghcr.io/tailscale/tailscale:latest
     hostname: jandey-blog
     environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_AUTHKEY=tskey-auth-kCTZNu2q3A21CNTRL-aLX7Dsj7Td2WWWzaUrZ2d2KyGWNVS7yiF
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_SERVE_CONFIG=/config/ts-serve.json
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
@@ -29,6 +29,16 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    restart: unless-stopped
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+      - web
     restart: unless-stopped
 
   # Git poller - checks for updates every 5 minutes
