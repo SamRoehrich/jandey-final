@@ -35,7 +35,8 @@ export const plugins: Plugin[] = [
       },
     },
     token: process.env.BLOB_READ_WRITE_TOKEN || '',
-    // Plugin will be inactive without a valid token
+    // Enable client-side uploads to bypass Vercel's 4.5MB serverless function limit
+    clientUploads: true,
   }),
   redirectsPlugin({
     collections: ['pages', 'posts'],

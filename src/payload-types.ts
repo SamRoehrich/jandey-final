@@ -275,7 +275,10 @@ export interface Post {
  */
 export interface Media {
   id: number;
-  alt?: string | null;
+  /**
+   * Alternative text for accessibility
+   */
+  alt: string;
   caption?: {
     root: {
       type: string;
