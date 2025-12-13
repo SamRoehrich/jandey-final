@@ -12,8 +12,14 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
 
   if (image && typeof image === 'object' && 'url' in image) {
     const ogUrl = image.sizes?.og?.url
+    const imageUrl = ogUrl || image.url
 
-    url = ogUrl ? serverUrl + ogUrl : serverUrl + image.url
+    // Vercel Blob URLs are already absolute, don't prepend serverUrl
+    if (imageUrl?.startsWith('http://') || imageUrl?.startsWith('https://')) {
+      url = imageUrl
+    } else {
+      url = serverUrl + imageUrl
+    }
   }
 
   return url
