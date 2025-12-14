@@ -15,12 +15,12 @@ export async function renderPosts(): Promise<string> {
         </div>
       </div>
 
-      <section className="section">
-        <div className="container">
+      <section className="section p-4">
+        <div className="container mx-auto gap-4">
           {posts.length > 0 ? (
-            <div className="cards-grid">
+            <div className="cards-grid gap-4">
               {posts.map((post) => (
-                <Card key={post.slug} post={post} />
+                <Card key={post.slug} post={post} className="mb-2" />
               ))}
             </div>
           ) : (
