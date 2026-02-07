@@ -31,3 +31,4 @@ bun.lockb.bak
 *.log
 
 public
+data/tags.json
