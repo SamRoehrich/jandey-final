@@ -1,4 +1,4 @@
-import { router, handleUpload } from './router'
+import { router, handleUpload, handleCreateTag } from './router'
 
 const PORT = process.env.PORT || 3000
 
@@ -36,6 +36,24 @@ Bun.serve({
         })
       } catch (error) {
         console.error('Error handling upload:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /create-tag
+    if (req.method === 'POST' && path === '/create-tag') {
+      try {
+        const formData = await req.formData()
+        const { html, status } = await handleCreateTag(formData)
+        return new Response(html, {
+          status,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache',
+          },
+        })
+      } catch (error) {
+        console.error('Error creating tag:', error)
         return new Response('Internal Server Error', { status: 500 })
       }
     }

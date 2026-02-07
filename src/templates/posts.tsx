@@ -20,7 +20,7 @@ export async function renderPosts(): Promise<string> {
           {posts.length > 0 ? (
             <div className="cards-grid gap-4">
               {posts.map((post) => (
-                <Card key={post.slug} post={post} className="mb-2" />
+                <Card key={post.slug} post={post} />
               ))}
             </div>
           ) : (
