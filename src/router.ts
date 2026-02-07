@@ -13,6 +13,7 @@ import { getPost, getPage } from './content'
 import { loadTags, createTag, getTagById, updateTag, deleteTag, getTagImageCount, type Tag } from './lib/tags'
 import { readdir, stat, unlink, rename, mkdir } from 'fs/promises'
 import path from 'path'
+import sharp from 'sharp'
 
 export type RouteResult = {
   html: string
@@ -285,13 +286,32 @@ export async function handleUpload(formData: FormData, req?: Request): Promise<R
     return { html: renderUpload({ tags, error: `Invalid file type: ${invalidFiles[0].name}. Only images are allowed.` }), status: 400 }
   }
 
-  // Save files to tag folder
+  // Save files to tag folder (convert to WebP)
   const tagFolderPath = path.join('public', 'images', tagId)
   const uploadPromises = files.map(async (file) => {
     const bytes = await file.arrayBuffer()
-    const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_') // Sanitize filename
+    const buffer = Buffer.from(bytes)
+    
+    // Convert filename to .webp extension
+    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_') // Sanitize filename
+    const fileName = originalName.replace(/\.[^.]+$/, '.webp') // Change extension to .webp
     const filePath = path.join(tagFolderPath, fileName)
-    await Bun.write(filePath, bytes)
+    
+    // Skip WebP conversion for SVG files (convert them to WebP as PNG first)
+    if (file.type === 'image/svg+xml') {
+      // For SVG, we'll keep them as SVG since they're already small and vector
+      const svgFileName = originalName
+      const svgFilePath = path.join(tagFolderPath, svgFileName)
+      await Bun.write(svgFilePath, bytes)
+      return svgFileName
+    }
+    
+    // Convert to WebP using sharp
+    const webpBuffer = await sharp(buffer)
+      .webp({ quality: 85, effort: 4 }) // Good quality, balanced compression effort
+      .toBuffer()
+    
+    await Bun.write(filePath, webpBuffer)
     return fileName
   })
 

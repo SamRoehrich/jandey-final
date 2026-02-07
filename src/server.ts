@@ -39,6 +39,7 @@ Bun.serve({
     // Static files from public directory
     if (
       path.startsWith('/images/') ||
+      path.startsWith('/js/') ||
       path === '/styles.css' ||
       path === '/favicon.ico' ||
       path === '/favicon.svg'
