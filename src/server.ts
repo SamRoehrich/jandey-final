@@ -1,6 +1,34 @@
-import { router, handleUpload, handleCreateTag } from './router'
+import { 
+  router, 
+  handleUpload, 
+  handleCreateTag,
+  handleDeleteImage,
+  handleUpdateImageTag,
+  handleUpdateCollection,
+  handleDeleteCollection,
+  handleAdminLogin,
+  handleAdminLogout,
+  type RouteResult 
+} from './router'
 
 const PORT = process.env.PORT || 3000
+
+async function handleRouteResult(result: RouteResult): Promise<Response> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-cache',
+  }
+  
+  // Add any additional headers from the result
+  if (result.headers) {
+    Object.assign(headers, result.headers)
+  }
+  
+  return new Response(result.html, {
+    status: result.status,
+    headers,
+  })
+}
 
 Bun.serve({
   port: PORT,
@@ -22,52 +50,125 @@ Bun.serve({
       return new Response('Not Found', { status: 404 })
     }
 
-    // Handle POST /upload
-    if (req.method === 'POST' && path === '/upload') {
+    // Handle POST /admin/login
+    if (req.method === 'POST' && path === '/admin/login') {
       try {
         const formData = await req.formData()
-        const { html, status } = await handleUpload(formData)
-        return new Response(html, {
-          status,
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache',
-          },
-        })
+        const result = await handleAdminLogin(formData)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error handling login:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/logout
+    if (req.method === 'POST' && path === '/admin/logout') {
+      try {
+        const result = await handleAdminLogout()
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error handling logout:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/upload (moved from /upload)
+    if (req.method === 'POST' && path === '/admin/upload') {
+      try {
+        const formData = await req.formData()
+        const result = await handleUpload(formData, req)
+        return handleRouteResult(result)
       } catch (error) {
         console.error('Error handling upload:', error)
         return new Response('Internal Server Error', { status: 500 })
       }
     }
 
-    // Handle POST /create-tag
+    // Legacy redirect for POST /upload
+    if (req.method === 'POST' && path === '/upload') {
+      return new Response(null, { 
+        status: 301, 
+        headers: { 'Location': '/admin/upload' } 
+      })
+    }
+
+    // Handle POST /create-tag (legacy, now at /admin/create-collection)
     if (req.method === 'POST' && path === '/create-tag') {
       try {
         const formData = await req.formData()
-        const { html, status } = await handleCreateTag(formData)
-        return new Response(html, {
-          status,
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache',
-          },
-        })
+        const result = await handleCreateTag(formData, req)
+        return handleRouteResult(result)
       } catch (error) {
         console.error('Error creating tag:', error)
         return new Response('Internal Server Error', { status: 500 })
       }
     }
 
-    // Dynamic routes
+    // Handle POST /admin/create-collection
+    if (req.method === 'POST' && path === '/admin/create-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleCreateTag(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error creating collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/delete-image
+    if (req.method === 'POST' && path === '/admin/delete-image') {
+      try {
+        const formData = await req.formData()
+        const result = await handleDeleteImage(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error deleting image:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/update-image-tag
+    if (req.method === 'POST' && path === '/admin/update-image-tag') {
+      try {
+        const formData = await req.formData()
+        const result = await handleUpdateImageTag(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error updating image tag:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/update-collection
+    if (req.method === 'POST' && path === '/admin/update-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleUpdateCollection(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error updating collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/delete-collection
+    if (req.method === 'POST' && path === '/admin/delete-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleDeleteCollection(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error deleting collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Dynamic routes - pass the request to handle query params and cookies
     try {
-      const { html, status } = await router(path)
-      return new Response(html, {
-        status,
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-cache',
-        },
-      })
+      const result = await router(path, req)
+      return handleRouteResult(result)
     } catch (error) {
       console.error('Error handling request:', error)
       return new Response('Internal Server Error', { status: 500 })

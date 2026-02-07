@@ -38,7 +38,7 @@ export function renderUpload({
 
         <form
           method="POST"
-          action="/upload"
+          action="/admin/upload"
           encType="multipart/form-data"
           className="space-y-6"
         >
@@ -121,7 +121,7 @@ export function renderUpload({
 
           <form
             method="POST"
-            action="/create-tag"
+            action="/admin/create-collection"
             className="space-y-4"
           >
             <div>
@@ -129,7 +129,7 @@ export function renderUpload({
                 htmlFor="tag-title"
                 className="block text-sm font-medium mb-2"
               >
-                Tag Title
+                Collection Title
               </label>
               <input
                 type="text"
@@ -169,27 +169,48 @@ export function renderUpload({
                 name="description"
                 rows={3}
                 className="w-full px-3 py-2 border rounded-md bg-background"
-                placeholder="Optional description for this tag"
+                placeholder="Optional description for this collection"
               />
             </div>
 
-            <input type="hidden" name="password" value="jandeyisgreat" />
+            <div>
+              <label
+                htmlFor="tag-password"
+                className="block text-sm font-medium mb-2"
+              >
+                Admin Password
+              </label>
+              <input
+                type="password"
+                id="tag-password"
+                name="password"
+                required
+                className="w-full px-3 py-2 border rounded-md bg-background"
+                placeholder="Enter admin password"
+              />
+            </div>
 
             <button
               type="submit"
               className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium border rounded-md hover:bg-accent transition-colors"
             >
-              Create Tag
+              Create Collection
             </button>
           </form>
         </div>
 
-        <div className="mt-12 pt-8 border-t">
+        <div className="mt-12 pt-8 border-t flex items-center justify-between">
+          <a
+            href="/admin"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Admin
+          </a>
           <a
             href="/gallery"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            ← View Gallery
+            View Gallery →
           </a>
         </div>
       </div>

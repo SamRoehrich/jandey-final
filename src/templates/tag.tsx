@@ -86,7 +86,7 @@ export function renderTagPage({ tag, images }: TagPageProps): string {
           <div className="text-center py-24">
             <p className="text-muted-foreground text-lg">No images in this tag yet.</p>
             <a
-              href="/upload"
+              href="/admin/upload"
               className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-background bg-foreground rounded-md hover:opacity-90 transition-opacity mt-4"
             >
               Upload Images

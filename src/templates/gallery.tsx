@@ -57,15 +57,7 @@ export async function renderGallery(): Promise<string> {
   return renderHTML(
     <Layout title="Gallery" description="Browse all uploaded images">
       <div className="max-w-[1400px] mx-auto px-6 py-24">
-        <div className="flex items-center justify-between mb-12">
-          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">Gallery</h1>
-          <a
-            href="/upload"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent transition-colors"
-          >
-            Upload Images
-          </a>
-        </div>
+        <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-12">Gallery</h1>
 
         {images.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -88,7 +80,7 @@ export async function renderGallery(): Promise<string> {
           <div className="text-center py-24">
             <p className="text-muted-foreground text-lg mb-6">No images yet.</p>
             <a
-              href="/upload"
+              href="/admin/upload"
               className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-background bg-foreground rounded-md hover:opacity-90 transition-opacity"
             >
               Upload Your First Image
