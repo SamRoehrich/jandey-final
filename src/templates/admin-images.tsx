@@ -2,16 +2,17 @@ import { renderHTML } from '../render'
 import { Layout } from './layout'
 import type { Tag } from '../lib/tags'
 
-interface ImageItem {
+interface MediaItem {
   src: string
   name: string
   tagId: string | null
   tagName: string | null
   fullPath: string
+  isVideo: boolean
 }
 
 interface AdminImagesTemplateProps {
-  images: ImageItem[]
+  images: MediaItem[]
   tags: Tag[]
   error?: string
   success?: string
@@ -27,10 +28,10 @@ export function renderAdminImages({
   const hasTags = tags.length > 0
 
   return renderHTML(
-    <Layout title="Manage Images" description="View, edit, and delete images">
+    <Layout title="Manage Media" description="View, edit, and delete images and videos">
       <div className="max-w-[1200px] mx-auto px-6 py-24">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Manage Images</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Manage Media</h1>
           <a
             href="/admin"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -59,18 +60,18 @@ export function renderAdminImages({
             <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Upload New Images
+            Upload New Media
           </a>
         </div>
 
         {!hasImages ? (
           <div className="text-center py-12 border rounded-lg">
-            <p className="text-muted-foreground mb-4">No images found</p>
+            <p className="text-muted-foreground mb-4">No media found</p>
             <a
               href="/admin/upload"
               className="text-sm font-medium text-primary hover:underline"
             >
-              Upload your first images
+              Upload your first images or videos
             </a>
           </div>
         ) : (
@@ -78,16 +79,28 @@ export function renderAdminImages({
             {images.map((image) => (
               <div key={image.src} className="border rounded-lg overflow-hidden">
                 <div className="aspect-square bg-muted">
-                  <img
-                    src={image.src}
-                    alt={image.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                  {image.isVideo ? (
+                    <video
+                      src={image.src}
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={image.src}
+                      alt={image.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
                 <div className="p-4">
                   <p className="font-medium truncate mb-1" title={image.name}>
                     {image.name}
+                    {image.isVideo && <span className="ml-2 text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">Video</span>}
                   </p>
                   <p className="text-sm text-muted-foreground mb-3">
                     {image.tagName ? `Collection: ${image.tagName}` : 'Uncategorized'}
@@ -136,7 +149,7 @@ export function renderAdminImages({
                         <button
                           type="submit"
                           className="w-full px-3 py-2 text-sm font-medium text-red-600 border border-red-300 rounded hover:bg-red-50 transition-colors"
-                          onClick="return confirm('Are you sure you want to delete this image?')"
+                          onClick="return confirm('Are you sure you want to delete this media?')"
                         >
                           Delete
                         </button>

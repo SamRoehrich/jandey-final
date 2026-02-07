@@ -93,9 +93,9 @@ export function verifyAuth(req?: Request): { valid: boolean; error?: RouteResult
   return { valid: true }
 }
 
-// Helper function to get all images across all tags
-async function getAllImages(): Promise<{ src: string; name: string; tagId: string | null; tagName: string | null; fullPath: string }[]> {
-  const images: { src: string; name: string; tagId: string | null; tagName: string | null; fullPath: string }[] = []
+// Helper function to get all media (images and videos) across all tags
+async function getAllMedia(): Promise<{ src: string; name: string; tagId: string | null; tagName: string | null; fullPath: string; isVideo: boolean }[]> {
+  const media: { src: string; name: string; tagId: string | null; tagName: string | null; fullPath: string; isVideo: boolean }[] = []
   const tags = await loadTags()
   const imagesDir = path.join(process.cwd(), 'public', 'images')
 
@@ -115,14 +115,20 @@ async function getAllImages(): Promise<{ src: string; name: string; tagId: strin
             const filePath = path.join(tagFolderPath, file)
             const stats = await stat(filePath)
             
-            if (stats.isFile() && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file)) {
-              images.push({
-                src: `/images/${tagId}/${file}`,
-                name: file,
-                tagId: tagId,
-                tagName: tag?.title || tagId,
-                fullPath: filePath,
-              })
+            if (stats.isFile()) {
+              const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file)
+              const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(file)
+              
+              if (isImage || isVideo) {
+                media.push({
+                  src: `/images/${tagId}/${file}`,
+                  name: file,
+                  tagId: tagId,
+                  tagName: tag?.title || tagId,
+                  fullPath: filePath,
+                  isVideo,
+                })
+              }
             }
           }
         } catch {
@@ -135,7 +141,7 @@ async function getAllImages(): Promise<{ src: string; name: string; tagId: strin
   }
 
   // Sort by name for consistent ordering
-  return images.sort((a, b) => a.name.localeCompare(b.name))
+  return media.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function router(path: string, req?: Request): Promise<RouteResult> {
@@ -188,7 +194,7 @@ export async function router(path: string, req?: Request): Promise<RouteResult> 
     const auth = verifyAuth(req)
     if (!auth.valid) return auth.error!
     
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { html: renderAdminImages({ images, tags }), status: 200 }
   }
@@ -274,58 +280,85 @@ export async function handleUpload(formData: FormData, req?: Request): Promise<R
   // Check if files were uploaded
   if (!files || files.length === 0) {
     const tags = await loadTags()
-    return { html: renderUpload({ tags, error: 'No images selected' }), status: 400 }
+    return { html: renderUpload({ tags, error: 'No files selected' }), status: 400 }
   }
 
-  // Validate file types
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+  // Validate file types (images + videos)
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+  const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v']
+  const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes]
   const invalidFiles = files.filter(file => !allowedTypes.includes(file.type))
   
   if (invalidFiles.length > 0) {
     const tags = await loadTags()
-    return { html: renderUpload({ tags, error: `Invalid file type: ${invalidFiles[0].name}. Only images are allowed.` }), status: 400 }
+    return { html: renderUpload({ tags, error: `Invalid file type: ${invalidFiles[0].name}. Only images (JPEG, PNG, GIF, WebP, SVG) and videos (MP4, WebM, MOV) are allowed.` }), status: 400 }
   }
 
-  // Save files to tag folder (convert to WebP)
+  // Save files to tag folder (convert images to WebP, save videos as-is)
   const tagFolderPath = path.join('public', 'images', tagId)
   const uploadPromises = files.map(async (file) => {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     
-    // Convert filename to .webp extension
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_') // Sanitize filename
-    const fileName = originalName.replace(/\.[^.]+$/, '.webp') // Change extension to .webp
+    // Sanitize filename
+    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+    
+    // Check if it's a video file
+    const isVideo = allowedVideoTypes.includes(file.type)
+    
+    if (isVideo) {
+      // Save video files as-is (no conversion)
+      const videoFileName = originalName
+      const videoFilePath = path.join(tagFolderPath, videoFileName)
+      await Bun.write(videoFilePath, bytes)
+      return { fileName: videoFileName, isVideo: true }
+    }
+    
+    // Handle images - convert to WebP
+    const fileName = originalName.replace(/\.[^.]+$/, '.webp')
     const filePath = path.join(tagFolderPath, fileName)
     
-    // Skip WebP conversion for SVG files (convert them to WebP as PNG first)
+    // Skip WebP conversion for SVG files
     if (file.type === 'image/svg+xml') {
       // For SVG, we'll keep them as SVG since they're already small and vector
       const svgFileName = originalName
       const svgFilePath = path.join(tagFolderPath, svgFileName)
       await Bun.write(svgFilePath, bytes)
-      return svgFileName
+      return { fileName: svgFileName, isVideo: false }
     }
     
     // Convert to WebP using sharp
     const webpBuffer = await sharp(buffer)
-      .webp({ quality: 85, effort: 4 }) // Good quality, balanced compression effort
+      .webp({ quality: 85, effort: 4 })
       .toBuffer()
     
     await Bun.write(filePath, webpBuffer)
-    return fileName
+    return { fileName, isVideo: false }
   })
 
   try {
     const uploadedFiles = await Promise.all(uploadPromises)
     const tags = await loadTags()
+    const imageCount = uploadedFiles.filter(f => !f.isVideo).length
+    const videoCount = uploadedFiles.filter(f => f.isVideo).length
+    
+    let successMessage = `Successfully uploaded to "${tag.title}": `
+    if (imageCount > 0 && videoCount > 0) {
+      successMessage += `${imageCount} image${imageCount === 1 ? '' : 's'} and ${videoCount} video${videoCount === 1 ? '' : 's'}`
+    } else if (videoCount > 0) {
+      successMessage += `${videoCount} video${videoCount === 1 ? '' : 's'}`
+    } else {
+      successMessage += `${imageCount} image${imageCount === 1 ? '' : 's'}`
+    }
+    
     return { 
-      html: renderUpload({ tags, success: `Successfully uploaded ${uploadedFiles.length} image(s) to "${tag.title}"` }), 
+      html: renderUpload({ tags, success: successMessage }), 
       status: 200 
     }
   } catch (error) {
     console.error('Upload error:', error)
     const tags = await loadTags()
-    return { html: renderUpload({ tags, error: 'Failed to upload images. Please try again.' }), status: 500 }
+    return { html: renderUpload({ tags, error: 'Failed to upload files. Please try again.' }), status: 500 }
   }
 }
 
@@ -380,7 +413,7 @@ export async function handleDeleteImage(formData: FormData, req?: Request): Prom
   const imagePath = formData.get('imagePath') as string
   
   if (!imagePath) {
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, error: 'No image specified' }), 
@@ -390,7 +423,7 @@ export async function handleDeleteImage(formData: FormData, req?: Request): Prom
   
   try {
     await unlink(imagePath)
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, success: 'Image deleted successfully' }), 
@@ -398,7 +431,7 @@ export async function handleDeleteImage(formData: FormData, req?: Request): Prom
     }
   } catch (error) {
     console.error('Delete error:', error)
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, error: 'Failed to delete image' }), 
@@ -417,7 +450,7 @@ export async function handleUpdateImageTag(formData: FormData, req?: Request): P
   const newTagId = formData.get('newTagId') as string
   
   if (!imagePath || !newTagId) {
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, error: 'Image and new collection required' }), 
@@ -428,7 +461,7 @@ export async function handleUpdateImageTag(formData: FormData, req?: Request): P
   // Validate new tag exists
   const tag = await getTagById(newTagId)
   if (!tag) {
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, error: 'Selected collection does not exist' }), 
@@ -448,7 +481,7 @@ export async function handleUpdateImageTag(formData: FormData, req?: Request): P
     // Move the file
     await rename(imagePath, newPath)
     
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, success: `Image moved to "${tag.title}"` }), 
@@ -456,7 +489,7 @@ export async function handleUpdateImageTag(formData: FormData, req?: Request): P
     }
   } catch (error) {
     console.error('Move error:', error)
-    const images = await getAllImages()
+    const images = await getAllMedia()
     const tags = await loadTags()
     return { 
       html: renderAdminImages({ images, tags, error: 'Failed to move image' }), 

@@ -20,9 +20,9 @@ export function renderUpload({
   const hasTags = tags.length > 0
 
   return renderHTML(
-    <Layout title="Upload Images" description="Upload images to the gallery">
+    <Layout title="Upload Media" description="Upload images and videos to the gallery">
       <div className="max-w-[800px] mx-auto px-6 py-24">
-        <h1 className="text-3xl font-bold tracking-tight mb-8">Upload Images</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-8">Upload Media</h1>
 
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg text-red-800">
@@ -74,25 +74,25 @@ export function renderUpload({
               ))}
             </select>
             <p className="mt-2 text-sm text-muted-foreground">
-              Images will be organized in the selected tag's folder
+              Media will be organized in the selected tag's folder
             </p>
           </div>
 
           <div>
             <label htmlFor="images" className="block text-sm font-medium mb-2">
-              Select Images
+              Select Images or Videos
             </label>
             <input
               type="file"
               id="images"
               name="images"
               multiple
-              accept="image/*"
+              accept="image/*,video/*"
               required
               className="w-full px-3 py-2 border rounded-md bg-background file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-foreground file:text-background hover:file:opacity-90"
             />
             <p className="mt-2 text-sm text-muted-foreground">
-              You can select multiple images. Supported formats: JPG, PNG, GIF, WebP
+              You can select multiple files. Supported formats: JPG, PNG, GIF, WebP, MP4, WebM, MOV
             </p>
           </div>
 
@@ -100,7 +100,7 @@ export function renderUpload({
             type="submit"
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-background bg-foreground rounded-md hover:opacity-90 transition-opacity"
           >
-            Upload Images
+            Upload Media
           </button>
         </form>
 
