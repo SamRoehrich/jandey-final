@@ -1,4 +1,4 @@
-import { router } from './router'
+import { router, handleUpload } from './router'
 
 const PORT = process.env.PORT || 3000
 
@@ -20,6 +20,24 @@ Bun.serve({
         return new Response(file)
       }
       return new Response('Not Found', { status: 404 })
+    }
+
+    // Handle POST /upload
+    if (req.method === 'POST' && path === '/upload') {
+      try {
+        const formData = await req.formData()
+        const { html, status } = await handleUpload(formData)
+        return new Response(html, {
+          status,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache',
+          },
+        })
+      } catch (error) {
+        console.error('Error handling upload:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
     }
 
     // Dynamic routes
