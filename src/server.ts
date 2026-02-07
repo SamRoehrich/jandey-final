@@ -10,8 +10,10 @@ import {
   handleAdminLogout,
   type RouteResult 
 } from './router'
+import path from 'path'
 
 const PORT = process.env.PORT || 3000
+const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
 async function handleRouteResult(result: RouteResult): Promise<Response> {
   const headers: Record<string, string> = {
@@ -34,25 +36,40 @@ Bun.serve({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url)
-    const path = url.pathname
+    const pathname = url.pathname
 
     // Static files from public directory
     if (
-      path.startsWith('/images/') ||
-      path.startsWith('/js/') ||
-      path === '/styles.css' ||
-      path === '/favicon.ico' ||
-      path === '/favicon.svg'
+      pathname.startsWith('/images/') ||
+      pathname.startsWith('/js/') ||
+      pathname === '/styles.css' ||
+      pathname === '/favicon.ico' ||
+      pathname === '/favicon.svg'
     ) {
-      const file = Bun.file(`./public${path}`)
+      const filePath = path.join(PUBLIC_DIR, pathname)
+      const file = Bun.file(filePath)
+      
       if (await file.exists()) {
-        return new Response(file)
+        const fileExtension = filePath.split('.').pop()?.toLowerCase()
+        
+        // Set appropriate content type for JS files
+        let contentType = file.type
+        if (fileExtension === 'js') {
+          contentType = 'application/javascript'
+        }
+        
+        return new Response(file, {
+          headers: {
+            'Content-Type': contentType || 'application/octet-stream',
+          }
+        })
       }
+      console.error(`Static file not found: ${filePath}`)
       return new Response('Not Found', { status: 404 })
     }
 
     // Handle POST /admin/login
-    if (req.method === 'POST' && path === '/admin/login') {
+    if (req.method === 'POST' && pathname === '/admin/login') {
       try {
         const formData = await req.formData()
         const result = await handleAdminLogin(formData)
@@ -64,7 +81,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/logout
-    if (req.method === 'POST' && path === '/admin/logout') {
+    if (req.method === 'POST' && pathname === '/admin/logout') {
       try {
         const result = await handleAdminLogout()
         return handleRouteResult(result)
@@ -75,7 +92,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/upload (moved from /upload)
-    if (req.method === 'POST' && path === '/admin/upload') {
+    if (req.method === 'POST' && pathname === '/admin/upload') {
       try {
         const formData = await req.formData()
         const result = await handleUpload(formData, req)
@@ -87,7 +104,7 @@ Bun.serve({
     }
 
     // Legacy redirect for POST /upload
-    if (req.method === 'POST' && path === '/upload') {
+    if (req.method === 'POST' && pathname === '/upload') {
       return new Response(null, { 
         status: 301, 
         headers: { 'Location': '/admin/upload' } 
@@ -95,7 +112,7 @@ Bun.serve({
     }
 
     // Handle POST /create-tag (legacy, now at /admin/create-collection)
-    if (req.method === 'POST' && path === '/create-tag') {
+    if (req.method === 'POST' && pathname === '/create-tag') {
       try {
         const formData = await req.formData()
         const result = await handleCreateTag(formData, req)
@@ -107,7 +124,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/create-collection
-    if (req.method === 'POST' && path === '/admin/create-collection') {
+    if (req.method === 'POST' && pathname === '/admin/create-collection') {
       try {
         const formData = await req.formData()
         const result = await handleCreateTag(formData, req)
@@ -119,7 +136,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/delete-image
-    if (req.method === 'POST' && path === '/admin/delete-image') {
+    if (req.method === 'POST' && pathname === '/admin/delete-image') {
       try {
         const formData = await req.formData()
         const result = await handleDeleteImage(formData, req)
@@ -131,7 +148,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/update-image-tag
-    if (req.method === 'POST' && path === '/admin/update-image-tag') {
+    if (req.method === 'POST' && pathname === '/admin/update-image-tag') {
       try {
         const formData = await req.formData()
         const result = await handleUpdateImageTag(formData, req)
@@ -143,7 +160,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/update-collection
-    if (req.method === 'POST' && path === '/admin/update-collection') {
+    if (req.method === 'POST' && pathname === '/admin/update-collection') {
       try {
         const formData = await req.formData()
         const result = await handleUpdateCollection(formData, req)
@@ -155,7 +172,7 @@ Bun.serve({
     }
 
     // Handle POST /admin/delete-collection
-    if (req.method === 'POST' && path === '/admin/delete-collection') {
+    if (req.method === 'POST' && pathname === '/admin/delete-collection') {
       try {
         const formData = await req.formData()
         const result = await handleDeleteCollection(formData, req)
@@ -168,7 +185,7 @@ Bun.serve({
 
     // Dynamic routes - pass the request to handle query params and cookies
     try {
-      const result = await router(path, req)
+      const result = await router(pathname, req)
       return handleRouteResult(result)
     } catch (error) {
       console.error('Error handling request:', error)
