@@ -51,20 +51,8 @@ export async function getGalleryImages(): Promise<GalleryImage[]> {
   return images.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-const INITIAL_BATCH_SIZE = 20
-
 export async function renderGallery(): Promise<string> {
   const images = await getGalleryImages()
-
-  // Split images: first 20 for server-side rendering, rest for virtual scroll
-  const initialImages = images.slice(0, INITIAL_BATCH_SIZE)
-  const remainingImages = images.slice(INITIAL_BATCH_SIZE)
-  const hasMoreImages = remainingImages.length > 0
-
-  // Only pass remaining images to virtual scroll script
-  const remainingImagesJson = hasMoreImages 
-    ? JSON.stringify(remainingImages).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
-    : null
 
   return renderHTML(
     <Layout title="Gallery" description="Browse all uploaded images">
@@ -72,35 +60,22 @@ export async function renderGallery(): Promise<string> {
         <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-12">Gallery</h1>
 
         {images.length > 0 ? (
-          <>
-            {/* Grid with first 20 images rendered server-side */}
-            <div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              data-gallery-grid
-              data-images={remainingImagesJson}
-            >
-              {initialImages.map((image) => (
-                <a
-                  key={image.src}
-                  href={image.tagId ? `/collection/${image.tagId}` : image.src}
-                  className="gallery-item group block aspect-square overflow-hidden rounded-lg border bg-muted"
-                >
-                  <img
-                    src={image.src}
-                    alt={image.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </a>
-              ))}
-            </div>
-            {/* Loading indicator - only show if there are more images */}
-            {hasMoreImages && (
-              <div id="gallery-loading" className="text-center py-8 text-muted-foreground">
-                Loading more images...
-              </div>
-            )}
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {images.map((image) => (
+              <a
+                key={image.src}
+                href={image.tagId ? `/collection/${image.tagId}` : image.src}
+                className="group block aspect-square overflow-hidden rounded-lg border bg-muted"
+              >
+                <img
+                  src={image.src}
+                  alt={image.name}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </a>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-24">
             <p className="text-muted-foreground text-lg mb-6">No images yet.</p>
@@ -113,8 +88,6 @@ export async function renderGallery(): Promise<string> {
           </div>
         )}
       </div>
-      {/* Virtual scrolling script - only load when there are remaining images */}
-      {hasMoreImages && <script src="/js/gallery-virtual-scroll.js" defer />}
     </Layout>,
   )
 }
