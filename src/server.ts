@@ -46,7 +46,9 @@ Bun.serve({
       pathname === '/favicon.ico' ||
       pathname === '/favicon.svg'
     ) {
-      const filePath = path.join(PUBLIC_DIR, pathname)
+      // Remove leading slash to properly join paths
+      const relativePath = pathname.slice(1)
+      const filePath = path.join(PUBLIC_DIR, relativePath)
       const file = Bun.file(filePath)
       
       if (await file.exists()) {
@@ -64,7 +66,7 @@ Bun.serve({
           }
         })
       }
-      console.error(`Static file not found: ${filePath}`)
+      console.error(`Static file not found: ${filePath} (PUBLIC_DIR: ${PUBLIC_DIR}, pathname: ${pathname})`)
       return new Response('Not Found', { status: 404 })
     }
 
