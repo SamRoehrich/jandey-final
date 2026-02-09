@@ -1,17 +1,16 @@
-import { Instagram, Twitter } from 'lucide-react'
+import { Instagram } from 'lucide-react'
 import { Separator } from './ui/separator'
 import { Button } from './ui/button'
 
 const navItems = [
   { href: '/', label: 'Home' },
-  { href: '/posts', label: 'Posts' },
+  { href: '/gallery', label: 'Gallery' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
 
 const socialLinks = [
-  { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
-  { href: 'https://instagram.com', icon: Instagram, label: 'Instagram' },
+  { href: 'https://instagram.com/jandeyshackelford', icon: Instagram, label: 'Instagram' },
 ]
 
 export function Footer() {
@@ -26,7 +25,7 @@ export function Footer() {
             href="/"
             className="text-xl font-bold tracking-tight uppercase hover:opacity-70 transition-opacity text-center md:text-left"
           >
-            Jandey Shaclekford
+            Jandey Shackelford
           </a>
 
           {/* Navigation */}
@@ -63,7 +62,7 @@ export function Footer() {
 
         {/* Copyright */}
         <p className="text-center text-sm text-muted-foreground">
-          &copy; {year} Jandey Shaclekford. All rights reserved.
+          &copy; {year} Jandey Shackelford. All rights reserved.
         </p>
       </div>
     </footer>

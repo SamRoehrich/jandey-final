@@ -88,6 +88,22 @@ export function renderAdmin({ isAuthenticated, error }: AdminTemplateProps): str
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <a
+            href="/admin/homepage"
+            className="block p-6 border rounded-lg hover:border-foreground hover:shadow-md transition-all group"
+          >
+            <h2 className="text-xl font-semibold mb-2 group-hover:text-primary">Manage Homepage</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Update the hero image and choose which collections to feature
+            </p>
+            <div className="flex items-center text-sm font-medium">
+              Go to Homepage
+              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+
+          <a
             href="/admin/images"
             className="block p-6 border rounded-lg hover:border-foreground hover:shadow-md transition-all group"
           >

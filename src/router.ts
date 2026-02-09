@@ -9,8 +9,10 @@ import { renderTagPage, getTagImages } from './templates/tag'
 import { renderAdmin } from './templates/admin'
 import { renderAdminImages } from './templates/admin-images'
 import { renderAdminCollections } from './templates/admin-collections'
+import { renderAdminHomepage } from './templates/admin-homepage'
 import { getPost, getPage } from './content'
 import { loadTags, createTag, getTagById, updateTag, deleteTag, getTagImageCount, type Tag } from './lib/tags'
+import { loadHomepageConfig, saveHomepageConfig, addFeaturedCollection, removeFeaturedCollection } from './lib/homepage'
 import { readdir, stat, unlink, rename, mkdir } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
@@ -144,6 +146,49 @@ async function getAllMedia(): Promise<{ src: string; name: string; tagId: string
   return media.sort((a, b) => a.name.localeCompare(b.name))
 }
 
+// Helper to get all collections with cover images and counts (for admin homepage)
+async function getAdminHomepageCollections(): Promise<(Tag & { coverImage?: string; imageCount: number })[]> {
+  const tags = await loadTags()
+  const result: (Tag & { coverImage?: string; imageCount: number })[] = []
+
+  for (const tag of tags) {
+    const images = await getTagImages(tag.id)
+    const firstImage = images.find((img) => !img.isVideo)
+    result.push({
+      ...tag,
+      coverImage: firstImage?.src,
+      imageCount: images.length,
+    })
+  }
+
+  // Also include folder-based collections not in tags.json
+  const imagesDir = path.join(process.cwd(), 'public', 'images')
+  try {
+    const entries = await readdir(imagesDir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isDirectory() && !tags.some((t) => t.id === entry.name)) {
+        const images = await getTagImages(entry.name)
+        if (images.length > 0) {
+          const firstImage = images.find((img) => !img.isVideo)
+          result.push({
+            id: entry.name,
+            title: entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/-/g, ' '),
+            date: '',
+            description: '',
+            createdAt: '',
+            coverImage: firstImage?.src,
+            imageCount: images.length,
+          })
+        }
+      }
+    }
+  } catch {
+    // Directory might not exist
+  }
+
+  return result
+}
+
 export async function router(path: string, req?: Request): Promise<RouteResult> {
   // Home page
   if (path === '/') {
@@ -226,6 +271,16 @@ export async function router(path: string, req?: Request): Promise<RouteResult> 
     return { html: renderUpload({ tags }), status: 200 }
   }
 
+  // Admin Homepage (GET) - requires auth
+  if (path === '/admin/homepage') {
+    const auth = verifyAuth(req)
+    if (!auth.valid) return auth.error!
+    
+    const config = await loadHomepageConfig()
+    const allCollections = await getAdminHomepageCollections()
+    return { html: renderAdminHomepage({ config, allCollections }), status: 200 }
+  }
+
   // Legacy /upload redirect
   if (path === '/upload') {
     return { html: '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/admin/upload"></head></html>', status: 301 }
@@ -239,6 +294,18 @@ export async function router(path: string, req?: Request): Promise<RouteResult> 
       if (tag) {
         const images = await getTagImages(tagId)
         return { html: renderTagPage({ tag, images }), status: 200 }
+      }
+      // Check if folder exists even without a tag entry
+      const images = await getTagImages(tagId)
+      if (images.length > 0) {
+        const folderTag = {
+          id: tagId,
+          title: tagId.charAt(0).toUpperCase() + tagId.slice(1).replace(/-/g, ' '),
+          date: '',
+          description: '',
+          createdAt: '',
+        }
+        return { html: renderTagPage({ tag: folderTag, images }), status: 200 }
       }
     }
     return { html: await renderNotFound(), status: 404 }
@@ -632,5 +699,153 @@ export async function handleDeleteCollection(formData: FormData, req?: Request):
       html: renderAdminCollections({ tags, tagCounts, error: errorMessage }), 
       status: 400 
     }
+  }
+}
+
+// Helper to render admin homepage with current state
+async function renderAdminHomepageWithState(overrides?: { error?: string; success?: string }): Promise<RouteResult> {
+  const config = await loadHomepageConfig()
+  const allCollections = await getAdminHomepageCollections()
+  return {
+    html: renderAdminHomepage({ config, allCollections, ...overrides }),
+    status: 200,
+  }
+}
+
+// Handle hero image upload
+export async function handleUpdateHeroImage(formData: FormData, req?: Request): Promise<RouteResult> {
+  const auth = verifyAuth(req)
+  if (!auth.valid) return auth.error!
+
+  const file = formData.get('heroImage') as File
+  if (!file || !file.size) {
+    return renderAdminHomepageWithState({ error: 'No image file provided' })
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    return renderAdminHomepageWithState({ error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' })
+  }
+
+  try {
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    // Convert to WebP and save as hero image
+    const heroFileName = 'image-hero1.webp'
+    const heroFilePath = path.join(process.cwd(), 'public', 'images', heroFileName)
+
+    const webpBuffer = await sharp(buffer)
+      .webp({ quality: 90, effort: 4 })
+      .toBuffer()
+
+    await Bun.write(heroFilePath, webpBuffer)
+
+    // Update homepage config
+    const config = await loadHomepageConfig()
+    config.heroImage = `/images/${heroFileName}`
+    await saveHomepageConfig(config)
+
+    return renderAdminHomepageWithState({ success: 'Hero image updated successfully' })
+  } catch (error) {
+    console.error('Hero image upload error:', error)
+    return renderAdminHomepageWithState({ error: 'Failed to upload hero image. Please try again.' })
+  }
+}
+
+// Handle setting hero image URL directly
+export async function handleSetHeroUrl(formData: FormData, req?: Request): Promise<RouteResult> {
+  const auth = verifyAuth(req)
+  if (!auth.valid) return auth.error!
+
+  const heroImageUrl = formData.get('heroImageUrl') as string
+  if (!heroImageUrl || !heroImageUrl.trim()) {
+    return renderAdminHomepageWithState({ error: 'No image URL provided' })
+  }
+
+  try {
+    const config = await loadHomepageConfig()
+    config.heroImage = heroImageUrl.trim()
+    await saveHomepageConfig(config)
+
+    return renderAdminHomepageWithState({ success: 'Hero image URL updated successfully' })
+  } catch (error) {
+    console.error('Set hero URL error:', error)
+    return renderAdminHomepageWithState({ error: 'Failed to update hero image URL' })
+  }
+}
+
+// Handle adding a collection to the homepage
+export async function handleAddHomepageCollection(formData: FormData, req?: Request): Promise<RouteResult> {
+  const auth = verifyAuth(req)
+  if (!auth.valid) return auth.error!
+
+  const collectionId = formData.get('collectionId') as string
+  if (!collectionId) {
+    return renderAdminHomepageWithState({ error: 'No collection specified' })
+  }
+
+  try {
+    await addFeaturedCollection(collectionId)
+    return renderAdminHomepageWithState({ success: `Collection added to homepage` })
+  } catch (error) {
+    console.error('Add homepage collection error:', error)
+    return renderAdminHomepageWithState({ error: 'Failed to add collection to homepage' })
+  }
+}
+
+// Handle removing a collection from the homepage
+export async function handleRemoveHomepageCollection(formData: FormData, req?: Request): Promise<RouteResult> {
+  const auth = verifyAuth(req)
+  if (!auth.valid) return auth.error!
+
+  const collectionId = formData.get('collectionId') as string
+  if (!collectionId) {
+    return renderAdminHomepageWithState({ error: 'No collection specified' })
+  }
+
+  try {
+    await removeFeaturedCollection(collectionId)
+    return renderAdminHomepageWithState({ success: `Collection removed from homepage` })
+  } catch (error) {
+    console.error('Remove homepage collection error:', error)
+    return renderAdminHomepageWithState({ error: 'Failed to remove collection from homepage' })
+  }
+}
+
+// Handle reordering a collection on the homepage (move up/down)
+export async function handleMoveHomepageCollection(formData: FormData, req?: Request): Promise<RouteResult> {
+  const auth = verifyAuth(req)
+  if (!auth.valid) return auth.error!
+
+  const collectionId = formData.get('collectionId') as string
+  const direction = formData.get('direction') as string
+
+  if (!collectionId || !direction) {
+    return renderAdminHomepageWithState({ error: 'Missing collection or direction' })
+  }
+
+  try {
+    const config = await loadHomepageConfig()
+    const idx = config.featuredCollections.indexOf(collectionId)
+    if (idx === -1) {
+      return renderAdminHomepageWithState({ error: 'Collection not found in featured list' })
+    }
+
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= config.featuredCollections.length) {
+      return renderAdminHomepageWithState({ error: 'Cannot move further in that direction' })
+    }
+
+    // Swap
+    const temp = config.featuredCollections[idx]
+    config.featuredCollections[idx] = config.featuredCollections[newIdx]
+    config.featuredCollections[newIdx] = temp
+    await saveHomepageConfig(config)
+
+    return renderAdminHomepageWithState({ success: `Collection moved ${direction}` })
+  } catch (error) {
+    console.error('Move homepage collection error:', error)
+    return renderAdminHomepageWithState({ error: 'Failed to reorder collection' })
   }
 }

@@ -25,17 +25,17 @@ const themeScript = `
 // Script for theme toggle functionality
 const themeToggleScript = `
 document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('theme-toggle');
-  if (!toggle) return;
-  
-  toggle.addEventListener('click', function() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const newTheme = isDark ? 'light' : 'dark';
-    document.documentElement.classList.remove('dark', 'light');
-    document.documentElement.classList.add(newTheme);
-    localStorage.setItem('theme', newTheme);
-  });
-  
+  var toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      var isDark = document.documentElement.classList.contains('dark');
+      var newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+  }
+
   // Listen for system preference changes
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
     if (!localStorage.getItem('theme')) {
@@ -46,8 +46,45 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 `
 
+// Script for mobile menu toggle
+const mobileMenuScript = `
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('mobile-menu-toggle');
+  var menu = document.getElementById('mobile-menu');
+  var iconOpen = document.getElementById('mobile-menu-icon-open');
+  var iconClose = document.getElementById('mobile-menu-icon-close');
+  if (!btn || !menu || !iconOpen || !iconClose) return;
+
+  btn.addEventListener('click', function() {
+    var isOpen = !menu.classList.contains('hidden');
+    if (isOpen) {
+      menu.classList.add('hidden');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    } else {
+      menu.classList.remove('hidden');
+      iconOpen.classList.add('hidden');
+      iconClose.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  // Close menu when clicking a link
+  var links = menu.querySelectorAll('a');
+  for (var i = 0; i < links.length; i++) {
+    links[i].addEventListener('click', function() {
+      menu.classList.add('hidden');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+});
+`
+
 export function Layout({ title, description, children }: LayoutProps) {
-  const fullTitle = title === 'Home' ? 'Jandey Shaclekford' : `${title} | Jandey Shaclekford`
+  const fullTitle = title === 'Home' ? 'Jandey Shackelford' : `${title} | Jandey Shackelford`
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -67,6 +104,8 @@ export function Layout({ title, description, children }: LayoutProps) {
         <Footer />
         {/* Theme toggle functionality */}
         <script dangerouslySetInnerHTML={{ __html: themeToggleScript }} />
+        {/* Mobile menu toggle */}
+        <script dangerouslySetInnerHTML={{ __html: mobileMenuScript }} />
       </body>
     </html>
   )

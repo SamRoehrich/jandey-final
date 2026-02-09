@@ -1,7 +1,7 @@
 {
   "name": "jandey-blog",
   "version": "1.0.0",
-  "description": "Jandey Shaclekford's personal blog",
+  "description": "Jandey Shackelford's personal website",
   "license": "MIT",
   "type": "module",
   "scripts": {

@@ -8,6 +8,11 @@ import {
   handleDeleteCollection,
   handleAdminLogin,
   handleAdminLogout,
+  handleUpdateHeroImage,
+  handleSetHeroUrl,
+  handleAddHomepageCollection,
+  handleRemoveHomepageCollection,
+  handleMoveHomepageCollection,
   type RouteResult 
 } from './router'
 import path from 'path'
@@ -42,6 +47,7 @@ Bun.serve({
     if (
       pathname.startsWith('/images/') ||
       pathname.startsWith('/js/') ||
+      pathname.startsWith('/files/') ||
       pathname === '/styles.css' ||
       pathname === '/favicon.ico' ||
       pathname === '/favicon.svg'
@@ -181,6 +187,66 @@ Bun.serve({
         return handleRouteResult(result)
       } catch (error) {
         console.error('Error deleting collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/homepage/update-hero
+    if (req.method === 'POST' && pathname === '/admin/homepage/update-hero') {
+      try {
+        const formData = await req.formData()
+        const result = await handleUpdateHeroImage(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error updating hero image:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/homepage/set-hero-url
+    if (req.method === 'POST' && pathname === '/admin/homepage/set-hero-url') {
+      try {
+        const formData = await req.formData()
+        const result = await handleSetHeroUrl(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error setting hero URL:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/homepage/add-collection
+    if (req.method === 'POST' && pathname === '/admin/homepage/add-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleAddHomepageCollection(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error adding homepage collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/homepage/remove-collection
+    if (req.method === 'POST' && pathname === '/admin/homepage/remove-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleRemoveHomepageCollection(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error removing homepage collection:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
+    }
+
+    // Handle POST /admin/homepage/move-collection
+    if (req.method === 'POST' && pathname === '/admin/homepage/move-collection') {
+      try {
+        const formData = await req.formData()
+        const result = await handleMoveHomepageCollection(formData, req)
+        return handleRouteResult(result)
+      } catch (error) {
+        console.error('Error moving homepage collection:', error)
         return new Response('Internal Server Error', { status: 500 })
       }
     }

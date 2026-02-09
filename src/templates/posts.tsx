@@ -7,7 +7,7 @@ export async function renderPosts(): Promise<string> {
   const posts = await getAllPosts()
 
   return renderHTML(
-    <Layout title="Posts" description="All blog posts by Jandey Shaclekford">
+    <Layout title="Posts" description="All blog posts by Jandey Shackelford">
       <div className="page-header">
         <div className="container">
           <h1>All Posts</h1>
