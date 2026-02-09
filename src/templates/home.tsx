@@ -85,7 +85,7 @@ export async function renderHome(): Promise<string> {
     >
       {/* Hero Section */}
       <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-        <div className="flex flex-col justify-center px-6 lg:px-16 py-24 lg:py-32 pt-32 lg:pt-32">
+        <div className="flex flex-col justify-center px-6 lg:px-10 py-24 lg:py-32 pt-32 lg:pt-32">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter leading-[0.9] uppercase">
             <span className="block">Jandey</span>
             <span className="block">Shackelford</span>
