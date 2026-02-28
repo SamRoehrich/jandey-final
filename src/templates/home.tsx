@@ -74,7 +74,7 @@ async function getFeaturedCollections(): Promise<CollectionWithCover[]> {
   return collections
 }
 
-export async function renderHome(): Promise<string> {
+export async function renderHome(canonicalUrl?: string): Promise<string> {
   const config = await loadHomepageConfig()
   const collections = await getFeaturedCollections()
 
@@ -82,6 +82,7 @@ export async function renderHome(): Promise<string> {
     <Layout
       title="Home"
       description="Welcome to Jandey Shackelford's website - art, ideas, and creative work."
+      canonicalUrl={canonicalUrl}
     >
       {/* Hero Section */}
       <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
@@ -102,6 +103,11 @@ export async function renderHome(): Promise<string> {
             src={config.heroImage}
             alt="Hero background"
             className="absolute inset-0 w-full h-full object-cover"
+            width={1920}
+            height={1080}
+            decoding="async"
+            loading="eager"
+            fetchPriority="high"
           />
         </div>
       </section>
@@ -127,6 +133,9 @@ export async function renderHome(): Promise<string> {
                       alt={collection.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
+                      decoding="async"
+                      width={600}
+                      height={800}
                     />
                     {/* Hover overlay with collection name */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-end">

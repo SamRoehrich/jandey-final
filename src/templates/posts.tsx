@@ -3,11 +3,11 @@ import { Layout } from './layout'
 import { Card } from '../components/Card'
 import { getAllPosts } from '../content'
 
-export async function renderPosts(): Promise<string> {
+export async function renderPosts(canonicalUrl?: string): Promise<string> {
   const posts = await getAllPosts()
 
   return renderHTML(
-    <Layout title="Posts" description="All blog posts by Jandey Shackelford">
+    <Layout title="Posts" description="All blog posts by Jandey Shackelford" canonicalUrl={canonicalUrl}>
       <div className="page-header">
         <div className="container">
           <h1>All Posts</h1>

@@ -190,14 +190,19 @@ async function getAdminHomepageCollections(): Promise<(Tag & { coverImage?: stri
 }
 
 export async function router(path: string, req?: Request): Promise<RouteResult> {
+  // Get the base URL for canonical links
+  const url = req ? new URL(req.url) : new URL('http://localhost:3000')
+  const siteUrl = process.env.SITE_URL || `${url.protocol}//${url.host}`
+  const canonicalUrl = `${siteUrl}${path}`
+
   // Home page
   if (path === '/') {
-    return { html: await renderHome(), status: 200 }
+    return { html: await renderHome(canonicalUrl), status: 200 }
   }
 
   // Posts listing
   if (path === '/posts') {
-    return { html: await renderPosts(), status: 200 }
+    return { html: await renderPosts(canonicalUrl), status: 200 }
   }
 
   // Single post
@@ -206,7 +211,7 @@ export async function router(path: string, req?: Request): Promise<RouteResult> 
     if (slug) {
       const post = await getPost(slug)
       if (post) {
-        return { html: await renderPost(post), status: 200 }
+        return { html: await renderPost(post, canonicalUrl), status: 200 }
       }
     }
     return { html: await renderNotFound(), status: 404 }
@@ -219,13 +224,13 @@ export async function router(path: string, req?: Request): Promise<RouteResult> 
   if (pageSlugs.includes(pageSlug)) {
     const page = await getPage(pageSlug)
     if (page) {
-      return { html: await renderPage(page), status: 200 }
+      return { html: await renderPage(page, canonicalUrl), status: 200 }
     }
   }
 
   // Gallery
   if (path === '/gallery') {
-    return { html: await renderGallery(), status: 200 }
+    return { html: await renderGallery(canonicalUrl), status: 200 }
   }
 
   // Admin Dashboard - requires auth

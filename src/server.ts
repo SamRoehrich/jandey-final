@@ -20,10 +20,43 @@ import path from 'path'
 const PORT = process.env.PORT || 3000
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
-async function handleRouteResult(result: RouteResult): Promise<Response> {
+// Simple cache versioning for cache invalidation
+// When admin actions modify content, increment this to force cache refresh
+let cacheVersion = Date.now()
+
+export function invalidateCache(): void {
+  cacheVersion = Date.now()
+  console.log(`Cache invalidated at ${new Date(cacheVersion).toISOString()}`)
+}
+
+function generateETag(): string {
+  return `"${cacheVersion}"`
+}
+
+async function handleRouteResult(result: RouteResult, isStaticPage: boolean = false, req?: Request): Promise<Response> {
   const headers: Record<string, string> = {
     'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'no-cache',
+  }
+  
+  // Add caching headers for static pages (public content)
+  if (isStaticPage && result.status === 200) {
+    // Cache public pages for 1 year with stale-while-revalidate
+    // ETag-based revalidation ensures freshness when content changes
+    headers['Cache-Control'] = 'public, max-age=31536000, stale-while-revalidate=86400, immutable'
+    headers['ETag'] = generateETag()
+    headers['Vary'] = 'Accept-Encoding'
+    
+    // Check for ETag match (conditional request)
+    const ifNoneMatch = req?.headers.get('if-none-match')
+    if (ifNoneMatch === generateETag()) {
+      return new Response(null, {
+        status: 304,
+        headers,
+      })
+    }
+  } else {
+    // No caching for dynamic/admin pages
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
   }
   
   // Add any additional headers from the result
@@ -66,9 +99,25 @@ Bun.serve({
           contentType = 'application/javascript'
         }
         
+        // Configure caching based on file type
+        let cacheControl: string
+        if (fileExtension === 'webp' || fileExtension === 'jpg' || fileExtension === 'jpeg' || 
+            fileExtension === 'png' || fileExtension === 'gif' || fileExtension === 'svg' ||
+            fileExtension === 'ico') {
+          // Images: cache for 1 year (immutable content)
+          cacheControl = 'public, max-age=31536000, immutable'
+        } else if (fileExtension === 'css' || fileExtension === 'js') {
+          // CSS/JS: cache for 1 year with stale-while-revalidate
+          cacheControl = 'public, max-age=31536000, stale-while-revalidate=86400'
+        } else {
+          // Other static files: cache for 1 day
+          cacheControl = 'public, max-age=86400'
+        }
+        
         return new Response(file, {
           headers: {
             'Content-Type': contentType || 'application/octet-stream',
+            'Cache-Control': cacheControl,
           }
         })
       }
@@ -81,7 +130,7 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleAdminLogin(formData)
-        return handleRouteResult(result)
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error handling login:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -92,7 +141,7 @@ Bun.serve({
     if (req.method === 'POST' && pathname === '/admin/logout') {
       try {
         const result = await handleAdminLogout()
-        return handleRouteResult(result)
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error handling logout:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -104,7 +153,11 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleUpload(formData, req)
-        return handleRouteResult(result)
+        // Invalidate cache after successful upload
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error handling upload:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -124,7 +177,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleCreateTag(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error creating tag:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -136,7 +192,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleCreateTag(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error creating collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -148,7 +207,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleDeleteImage(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error deleting image:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -160,7 +222,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleUpdateImageTag(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error updating image tag:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -172,7 +237,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleUpdateCollection(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error updating collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -184,7 +252,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleDeleteCollection(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error deleting collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -196,7 +267,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleUpdateHeroImage(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error updating hero image:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -208,7 +282,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleSetHeroUrl(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error setting hero URL:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -220,7 +297,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleAddHomepageCollection(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error adding homepage collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -232,7 +312,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleRemoveHomepageCollection(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error removing homepage collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -244,7 +327,10 @@ Bun.serve({
       try {
         const formData = await req.formData()
         const result = await handleMoveHomepageCollection(formData, req)
-        return handleRouteResult(result)
+        if (result.status === 200) {
+          invalidateCache()
+        }
+        return handleRouteResult(result, false, req)
       } catch (error) {
         console.error('Error moving homepage collection:', error)
         return new Response('Internal Server Error', { status: 500 })
@@ -252,9 +338,11 @@ Bun.serve({
     }
 
     // Dynamic routes - pass the request to handle query params and cookies
+    // Determine if this is a public/static page for caching purposes
+    const isPublicPage = !pathname.startsWith('/admin')
     try {
       const result = await router(pathname, req)
-      return handleRouteResult(result)
+      return handleRouteResult(result, isPublicPage && result.status === 200, req)
     } catch (error) {
       console.error('Error handling request:', error)
       return new Response('Internal Server Error', { status: 500 })

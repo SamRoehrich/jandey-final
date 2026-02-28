@@ -2,11 +2,11 @@ import { renderHTML } from '../render'
 import { Layout } from './layout'
 import type { Page } from '../content'
 
-export async function renderPage(page: Page): Promise<string> {
+export async function renderPage(page: Page, canonicalUrl?: string): Promise<string> {
   const { frontmatter, content } = page
 
   return renderHTML(
-    <Layout title={frontmatter.title} description={frontmatter.description}>
+    <Layout title={frontmatter.title} description={frontmatter.description} canonicalUrl={canonicalUrl}>
       <div className="page-header">
         <div className="container">
           <h1>{frontmatter.title}</h1>

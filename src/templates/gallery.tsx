@@ -121,11 +121,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 `
 
-export async function renderGallery(): Promise<string> {
+export async function renderGallery(canonicalUrl?: string): Promise<string> {
   const collections = await getCollections()
 
   return renderHTML(
-    <Layout title="Gallery" description="Browse collections of work by Jandey Shackelford">
+    <Layout title="Gallery" description="Browse collections of work by Jandey Shackelford" canonicalUrl={canonicalUrl}>
       <div className="max-w-[1400px] mx-auto px-6 py-24">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-12">
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">Gallery</h1>
